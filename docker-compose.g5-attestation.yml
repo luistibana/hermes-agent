@@ -17,7 +17,7 @@ services:
     network_mode: none
     read_only: true
     tmpfs:
-      - /run:size=32m,mode=0755
+      - /run:rw,exec,nosuid,size=32m,mode=0755
       - /tmp:size=64m,mode=1777
       - /opt/data:size=128m,uid=10000,gid=10000,mode=0700
     cap_drop:
