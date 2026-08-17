@@ -58,11 +58,20 @@ MAX_SCAN_CHARS = 65_536
 # bypasses without introducing unbounded repetition.
 _FILLER = r"(?:\w+\s+){0,8}"
 
+# Portuguese variants keep the same fail-closed semantics as the English
+# classic-injection patterns while allowing bounded filler-word bypasses.
+_PT_INSTRUCTION_TARGET = r'(?:instru[cç](?:[aã]o|[oõ]es)|regras?|diretriz(?:es)?)'
+_PT_PRIOR_MARKER = r'(?:anterior(?:es|mente)?|pr[eé]via(?:s|mente)?|acima)'
+_PT_TARGET_SEQUENCE = rf'{_PT_INSTRUCTION_TARGET}(?:\s*,?\s*(?:(?:e|ou)\s+)?(?:as?\s+)?{_PT_INSTRUCTION_TARGET})*'
+_PT_BOUNDED_GAP = r'(?:\s+(?!(?:mas|por[eé]m|atuais?|preserv(?:e|ar)|mantenha)\b)\w+){0,5}\s+'
+
 # Each entry: (regex, pattern_id, scope)
 # scope ∈ {"all", "context", "strict"}
 _PATTERNS: List[Tuple[str, str, str]] = [
     # ── Classic prompt injection (applies everywhere) ────────────────
     (rf'ignore\s+{_FILLER}(previous|all|above|prior)\s+{_FILLER}instructions', "prompt_injection", "all"),
+    (rf'ignor(?:e|a|ar)\s+(?:\w+\s+){{0,3}}(?:(?:todas?|quaisquer)\s+)?(?:as?\s+)?{_PT_TARGET_SEQUENCE}\b{_PT_BOUNDED_GAP}{_PT_PRIOR_MARKER}\b', "prompt_injection_pt", "all"),
+    (rf'(?:desconsidere|n[aã]o\s+siga)\s+(?:\w+\s+){{0,3}}(?:(?:todas?|quaisquer)\s+)?(?:as?\s+)?{_PT_TARGET_SEQUENCE}\b{_PT_BOUNDED_GAP}{_PT_PRIOR_MARKER}\b', "disregard_rules_pt", "all"),
     (r'system\s+prompt\s+override', "sys_prompt_override", "all"),
     (rf'disregard\s+{_FILLER}(your|all|any)\s+{_FILLER}(instructions|rules|guidelines)', "disregard_rules", "all"),
     (rf'act\s+as\s+(if|though)\s+{_FILLER}you\s+{_FILLER}(have\s+no|don\'t\s+have)\s+{_FILLER}(restrictions|limits|rules)', "bypass_restrictions", "all"),
